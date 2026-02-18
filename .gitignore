@@ -1,0 +1,39 @@
+# Gradle
+**/build/
+build/
+.gradle/
+gradle/wrapper/gradle-wrapper.jar
+gradle/wrapper/gradle-wrapper.properties
+
+# IDE
+.idea/
+*.iml
+*.iws
+out/
+.classpath
+.project
+.settings/
+
+# Node / React / Vite
+**/node_modules/
+**/dist/
+**/coverage/
+**/.vite/
+**/.env.local
+**/.env.*.local
+
+# OS junk
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Logs & temp
+*.log
+*.tmp
+*.bak
+*~
+
+# Project-specific temp files (add more as needed)
+**/generated-ui-*.zip
+**/temp/

@@ -1,0 +1,5 @@
+rootProject.name = 'vision2markup'
+
+include 'image-to-code-component'
+include 'backend-api'
+include 'ui-frontend'
