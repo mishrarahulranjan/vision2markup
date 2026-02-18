@@ -3,13 +3,18 @@ plugins {
     id 'io.spring.dependency-management'
 }
 
+springBoot {
+    mainClass = 'com.ai.Vision2MarkupStarterApplication'
+}
+
 dependencies {
+    // Only depend on image-to-code-component
     implementation project(':image-to-code-component')
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
-    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 
+    // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 }

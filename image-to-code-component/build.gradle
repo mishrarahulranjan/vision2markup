@@ -1,38 +1,22 @@
 plugins {
     id 'java-library'
-    id 'org.springframework.boot' version '3.3.5' apply false
-    id 'io.spring.dependency-management' version '1.1.6' apply false
-    id 'com.github.node-gradle.node' version '7.0.2' apply false
-}
-
-group = 'com.ai'
-version = '0.0.1-SNAPSHOT'
-
-repositories {
-    mavenCentral()
-    maven { url 'https://repo.spring.io/milestone' }   // ← this line was missing → required for 2.0.0-M2
-}
-
-dependencyManagement {
-    imports {
-        mavenBom 'org.springframework.boot:spring-boot-dependencies:3.3.5'
-        mavenBom 'org.springframework.ai:spring-ai-bom:2.0.0-M2'
-    }
 }
 
 dependencies {
-
-    implementation 'org.springframework.ai:spring-ai-starter-model-anthropic'
-
-    // Spring Boot – bring in both core + web
+    // Core Spring Boot (required for @Service, ApplicationContext, etc.)
     implementation 'org.springframework.boot:spring-boot-starter'
+
+    // Web (for MultipartFile, etc.)
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
-    // ZIP & file utils
+    // Spring AI – no version needed (BOM provides it)
+    implementation 'org.springframework.ai:spring-ai-starter-model-anthropic'
+
+    // Utilities
     implementation 'org.zeroturnaround:zt-zip:1.17'
     implementation 'commons-io:commons-io:2.16.1'
 
-    // ── Lombok ────────────────────────────────────────────────
+    // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 }

@@ -6,30 +6,15 @@ node {
     version = '20.17.0'
     npmVersion = '10.8.2'
     download = true
-    workDir = file("${project.buildDir}/nodejs")
-    npmWorkDir = file("${project.buildDir}/npm")
-}
-
-// Use the tasks automatically provided by the plugin
-// Do NOT create your own npmInstall / npmBuild tasks
-
-npm_run_build {
-    environment = [ 'NODE_ENV': 'production' ]
-    args = ['--no-warnings']
-}
-
-tasks.register('copyReactBuild', Copy) {
-    dependsOn 'npm_run_build'
-    from "${project.projectDir}/dist"
-    into "${rootProject.layout.projectDirectory.dir('../backend/src/main/resources/static')}"
 }
 
 tasks.named('build') {
-    dependsOn 'copyReactBuild'
-}
+    dependsOn 'npm_run_build'
 
-// Optional: make clean remove node_modules too
-clean {
-    delete 'node_modules'
-    delete 'dist'
+    doLast {
+        copy {
+            from "${project.projectDir}/dist"
+            into "${rootProject.layout.projectDirectory.dir('../backend-api/src/main/resources/static')}"
+        }
+    }
 }

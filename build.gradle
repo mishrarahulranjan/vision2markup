@@ -1,6 +1,7 @@
 plugins {
     id 'org.springframework.boot' version '3.3.5' apply false
     id 'io.spring.dependency-management' version '1.1.6' apply false
+    id 'com.github.node-gradle.node' version '7.0.2' apply false
 }
 
 allprojects {
@@ -9,11 +10,10 @@ allprojects {
 
     repositories {
         mavenCentral()
-        maven { url 'https://repo.spring.io/milestone' }
+        maven { url 'https://repo.spring.io/milestone' }      // ← this line is critical
     }
 }
 
-// This block makes all subprojects inherit Spring Boot dependency versions
 subprojects {
     apply plugin: 'java'
     apply plugin: 'io.spring.dependency-management'
@@ -24,10 +24,10 @@ subprojects {
         }
     }
 
-    // Import Spring Boot BOM → versions are managed automatically
     dependencyManagement {
         imports {
-            mavenBom org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES
+            mavenBom 'org.springframework.boot:spring-boot-dependencies:3.3.5'
+            mavenBom 'org.springframework.ai:spring-ai-bom:2.0.0-M2'
         }
     }
 }
