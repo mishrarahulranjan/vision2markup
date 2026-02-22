@@ -1,70 +1,85 @@
 package com.ai.service.llm;
 
 import com.ai.dto.DesignRequestDto;
+import com.ai.dto.WebAppFiles;
 import lombok.RequiredArgsConstructor;
-import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class LlmService {
 
-    private final ChatClient chatClient;
+    private final ChatService chatService;
 
-    public String generateCodeFromImage(byte[] imageBytes,
-                                        String mimeType,
-                                        String style) {
+    public WebAppFiles generateCodeFromImage(byte[] imageBytes,
+                                             String mimeType,
+                                             String style) {
 
         String systemPrompt = """
             You are a senior frontend engineer.
 
-            You generate clean, production-ready HTML.
+            Your task is to generate a complete mockup web app.
 
-            STRICT RULES:
-            - Output ONLY raw HTML.
-            - Do NOT use markdown.
-            - Do NOT wrap in ```html.
-            - No explanations.
-            - No comments outside HTML.
-            - Use Tailwind CSS via CDN.
+            You must return STRICT JSON with this structure:
+
+            {
+              "index_html": "...",
+              "style_css": "...",
+              "script_js": "..."
+            }
+
+            RULES:
+            - Return JSON only.
+            - No markdown.
+            - No explanation.
+            - No backticks.
+            - index_html must be valid HTML5.
+            - Do NOT embed CSS inside HTML.
+            - Do NOT embed JS inside HTML.
+            - Link style.css and script.js properly.
+            - CSS must reflect colors, spacing, typography and layout visible in image.
             - Fully responsive.
-            - Use semantic tags.
-            - Keep structure clean and organized.
+            - Use semantic HTML.
+            - Keep code production clean.
             """;
 
         String userPrompt = """
-            Convert this screenshot into modern, responsive HTML.
+            Convert this UI screenshot into a modern responsive web app.
 
             Style preference: %s
+
+            Requirements:
+            - Extract layout from image.
+            - Infer color palette.
+            - Create separate CSS file.
+            - Add basic JS interactions if needed (navbar toggle, buttons etc).
             """.formatted(style != null ? style : "modern");
 
-        return chatClient.prompt()
-                .system(systemPrompt)
-                .user(u -> u
-                        .text(userPrompt)
-                        .media(MediaType.parseMediaType(mimeType),
-                                new ByteArrayResource(imageBytes))
-                )
-                .call()
-                .content();
+        return chatService.chat(systemPrompt, userPrompt, mimeType, imageBytes);
     }
 
-    public String generateCodeFromDesign(DesignRequestDto request) {
+    public WebAppFiles generateCodeFromDesign(DesignRequestDto request) {
 
         String systemPrompt = """
             You are a senior frontend engineer.
 
-            Generate a full responsive HTML webpage using Tailwind CSS CDN.
+            Generate a complete web application.
 
-            STRICT RULES:
-            - Output ONLY raw HTML.
+            Return STRICT JSON only:
+
+            {
+              "index_html": "...",
+              "style_css": "...",
+              "script_js": "..."
+            }
+
+            RULES:
             - No markdown.
             - No explanation.
-            - No comments outside HTML.
-            - Use semantic structure.
-            - Modern clean layout.
+            - Separate HTML, CSS, JS.
+            - Responsive layout.
+            - Clean semantic structure.
+            - Modern UI.
             """;
 
         StringBuilder components = new StringBuilder();
@@ -83,15 +98,16 @@ public class LlmService {
             %s
 
             Style preference: %s
+
+            Requirements:
+            - Generate layout structure in HTML.
+            - Generate styling in CSS file.
+            - Add small JS interactions if appropriate.
             """.formatted(
                 components,
                 request.style() != null ? request.style() : "modern"
         );
 
-        return chatClient.prompt()
-                .system(systemPrompt)
-                .user(userPrompt)
-                .call()
-                .content();
+        return chatService.chat(systemPrompt, userPrompt);
     }
 }

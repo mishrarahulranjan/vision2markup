@@ -2,7 +2,9 @@ package com.ai.api;
 
 import com.ai.dto.DesignRequestDto;
 import com.ai.dto.GeneratedUiDto;
+import com.ai.dto.WebAppFiles;
 import com.ai.service.ImageToCodeService;
+import com.ai.service.PreviewCacheService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -21,6 +23,7 @@ import java.io.IOException;
 public class MarkUpGeneratorController {
 
     private final ImageToCodeService imageToCodeService;
+    private final PreviewCacheService previewCacheService;
 
     @PostMapping(value = "/generate/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Resource> generateImageZip(
@@ -40,18 +43,18 @@ public class MarkUpGeneratorController {
             @RequestParam("file") MultipartFile file,
             @RequestParam(defaultValue = "modern") String style) throws IOException {
 
-        String html = imageToCodeService.generateImagePreview(file, style);
+        WebAppFiles webAppFiles = previewCacheService.generateImagePreview(file, style);
 
-        return ResponseEntity.ok(html);
+        return ResponseEntity.ok(webAppFiles.index_html());
     }
 
     @PostMapping("/generate/design/preview")
     public ResponseEntity<String> generateDesignPreview(
             @RequestBody DesignRequestDto request) {
 
-        String html = imageToCodeService.generateDesignPreview(request);
+        WebAppFiles webAppFiles = previewCacheService.generateDesignPreview(request);
 
-        return ResponseEntity.ok(html);
+        return ResponseEntity.ok(webAppFiles.index_html());
     }
 
     @PostMapping("/generate/design")

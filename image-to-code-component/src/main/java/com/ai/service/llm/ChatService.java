@@ -1,8 +1,10 @@
 package com.ai.service.llm;
 
+import com.ai.dto.WebAppFiles;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -11,12 +13,27 @@ public class ChatService {
 
     private final ChatClient chatClient;
 
-    public String chat(String conversationId, String message) {
+    public WebAppFiles chat(String systemPrompt, String userPrompt, String mimeType, byte[] imageBytes) {
 
         return chatClient.prompt()
-                .user(message)
-                .advisors(a-> a.param(ChatMemory.CONVERSATION_ID, conversationId))
+                .system(systemPrompt)
+                .user(u -> u
+                        .text(userPrompt)
+                        .media(MediaType.parseMediaType(mimeType),
+                                new ByteArrayResource(imageBytes))
+                )
                 .call()
-                .content();
+                .entity(WebAppFiles.class);
+    }
+
+    public WebAppFiles chat(String systemPrompt, String userPrompt) {
+
+        return chatClient.prompt()
+                .system(systemPrompt)
+                .user(u -> u
+                        .text(userPrompt)
+                )
+                .call()
+                .entity(WebAppFiles.class);
     }
 }
