@@ -17,7 +17,7 @@ public class PreviewCacheService {
     private final LlmService llmService;
 
     @Cacheable(value = "htmlPreviewCache",
-            key = "#file.originalFilename + '_' + #style")
+            key = "#root.args[0].originalFilename + '_' + #style")
     public WebAppFiles generateImagePreview(MultipartFile file, String style) throws IOException {
         return llmService.generateCodeFromImage(
                 file.getBytes(),
