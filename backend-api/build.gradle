@@ -8,13 +8,21 @@ springBoot {
 }
 
 dependencies {
-    // Only depend on image-to-code-component
     implementation project(':image-to-code-component')
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
-
-    // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+}
+
+tasks.register("copyFrontend", Copy) {
+    dependsOn(":ui-frontend:npm_run_build")
+
+    from(project(":ui-frontend").layout.projectDirectory.dir("dist"))
+    into(layout.projectDirectory.dir("src/main/resources/static"))
+}
+
+tasks.named("processResources") {
+    dependsOn("copyFrontend")
 }

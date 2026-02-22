@@ -1,5 +1,6 @@
 package com.ai.api;
 
+import com.ai.dto.DesignRequestDto;
 import com.ai.dto.GeneratedUiDto;
 import com.ai.service.ImageToCodeService;
 import lombok.RequiredArgsConstructor;
@@ -16,33 +17,58 @@ import java.io.IOException;
 @RestController
 @RequestMapping("/api/ui")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*") // adjust for production
+@CrossOrigin(origins = "*")
 public class MarkUpGeneratorController {
 
     private final ImageToCodeService imageToCodeService;
 
-    @PostMapping(value = "/generate", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Resource> generateAndDownloadZip(
+    @PostMapping(value = "/generate/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Resource> generateImageZip(
             @RequestParam("file") MultipartFile file,
-            @RequestParam(value = "style", defaultValue = "modern") String style) throws IOException {
+            @RequestParam(defaultValue = "modern") String style) throws IOException {
 
-        // Call service → get DTO with HTML content & zip path
-        GeneratedUiDto result = imageToCodeService.generate(file, style);
-
-        // Prepare ZIP file as downloadable resource
+        GeneratedUiDto result = imageToCodeService.generateFromImage(file, style);
         Resource zipResource = new FileSystemResource(result.zipPath());
 
         return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"generated-ui.zip\"")
-                .header(HttpHeaders.CACHE_CONTROL, "no-cache, no-store, must-revalidate")
-                .header(HttpHeaders.PRAGMA, "no-cache")
-                .header(HttpHeaders.EXPIRES, "0")
+                .body(zipResource);
+    }
+
+    @PostMapping(value = "/generate/image/preview", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<String> generateImagePreview(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(defaultValue = "modern") String style) throws IOException {
+
+        String html = imageToCodeService.generateImagePreview(file, style);
+
+        return ResponseEntity.ok(html);
+    }
+
+    @PostMapping("/generate/design/preview")
+    public ResponseEntity<String> generateDesignPreview(
+            @RequestBody DesignRequestDto request) {
+
+        String html = imageToCodeService.generateDesignPreview(request);
+
+        return ResponseEntity.ok(html);
+    }
+
+    @PostMapping("/generate/design")
+    public ResponseEntity<Resource> generateDesignZip(
+            @RequestBody DesignRequestDto request) {
+
+        GeneratedUiDto result = imageToCodeService.generateFromDesign(request);
+
+        Resource zipResource = new FileSystemResource(result.zipPath());
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"generated-ui.zip\"")
                 .body(zipResource);
     }
 
     @GetMapping("/health")
     public String healthCheck() {
-        return "Backend API is running – image to HTML/zip ready";
+        return "Backend API is running – image & design to HTML/zip ready";
     }
 }

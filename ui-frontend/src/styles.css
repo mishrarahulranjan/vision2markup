@@ -1,0 +1,23 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f5f7fa;
+}
+
+.container {
+  padding: 3rem;
+  max-width: 800px;
+  margin: auto;
+  text-align: center;
+}
+
+.upload-box {
+  margin-top: 2rem;
+}
+
+.result-box {
+  margin-top: 2rem;
+  padding: 1rem;
+  background: #e6ffed;
+  border-radius: 8px;
+}

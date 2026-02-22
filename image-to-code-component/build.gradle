@@ -3,20 +3,16 @@ plugins {
 }
 
 dependencies {
-    // Core Spring Boot (required for @Service, ApplicationContext, etc.)
-    implementation 'org.springframework.boot:spring-boot-starter'
 
-    // Web (for MultipartFile, etc.)
-    implementation 'org.springframework.boot:spring-boot-starter-web'
+    // Core Spring Boot
+    api 'org.springframework.boot:spring-boot-starter'
+    api 'org.springframework.boot:spring-boot-starter-web'
 
-    // Spring AI – no version needed (BOM provides it)
-    implementation 'org.springframework.ai:spring-ai-starter-model-anthropic'
+    api 'org.springframework.ai:spring-ai-starter-model-openai'
 
-    // Utilities
     implementation 'org.zeroturnaround:zt-zip:1.17'
     implementation 'commons-io:commons-io:2.16.1'
 
-    // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 }
