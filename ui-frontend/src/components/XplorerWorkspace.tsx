@@ -1,61 +1,94 @@
+import { useState, useMemo } from "react";
 import { useBuilder } from "../context/BuilderContext";
 
 export default function XplorerWorkspace() {
-  const { files, activeFile, setActiveFile, updateFileContent, downloadUrl } = useBuilder();
+  const { files, setFiles } = useBuilder();
+  const [activeFile, setActiveFile] = useState<"html" | "css" | "js">("html");
 
-  const combinedDoc = `
-    <html>
-      <head><style>${files.style_css}</style></head>
-      <body>${files.index_html}<script>${files.script_js}</script></body>
-    </html>
-  `;
+  // Injects the CSS and JS into the HTML for the iframe preview
+  const combinedDoc = useMemo(() => {
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <script src="https://cdn.tailwindcss.com"></script>
+          <style>${files.style_css}</style>
+        </head>
+        <body>
+          ${files.index_html}
+          <script>${files.script_js}</script>
+        </body>
+      </html>
+    `;
+  }, [files]);
+
+  const updateContent = (val: string) => {
+    const key = activeFile === "html" ? "index_html" : activeFile === "css" ? "style_css" : "script_js";
+    setFiles({ ...files, [key]: val });
+  };
+
+  const getActiveContent = () => {
+    if (activeFile === "html") return files.index_html;
+    if (activeFile === "css") return files.style_css;
+    return files.script_js;
+  };
 
   return (
-    <div className="flex h-[75vh] border border-gray-800 rounded-3xl overflow-hidden bg-[#121214] shadow-2xl animate-slide-up">
-      {/* 1. Sidebar Explorer */}
-      <div className="w-60 bg-[#0b0b0d] border-r border-gray-800 flex flex-col">
-        <div className="p-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest border-b border-gray-800/50">Explorer</div>
-        <div className="flex-1 py-2">
-          <FileRow name="index.html" active={activeFile === 'index_html'} onClick={() => setActiveFile('index_html')} icon="📄" />
-          <FileRow name="style.css" active={activeFile === 'style_css'} onClick={() => setActiveFile('style_css')} icon="🎨" />
-          <FileRow name="script.js" active={activeFile === 'script_js'} onClick={() => setActiveFile('script_js')} icon="⚡" />
+    <div className="flex h-[750px] bg-[#0b0b0d] border border-gray-800 rounded-3xl overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom-6">
+
+      {/* 1. LEFT SIDEBAR: File Explorer */}
+      <div className="w-64 bg-[#121214] border-r border-gray-800 p-6">
+        <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-6">Explorer</h3>
+        <div className="space-y-2">
+          {[
+            { id: "html", label: "index.html", icon: "🌐", color: "text-orange-400" },
+            { id: "css", label: "style.css", icon: "🎨", color: "text-blue-400" },
+            { id: "js", label: "script.js", icon: "📜", color: "text-yellow-400" }
+          ].map((file) => (
+            <button
+              key={file.id}
+              onClick={() => setActiveFile(file.id as any)}
+              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all ${
+                activeFile === file.id ? "bg-indigo-600/10 text-white border border-indigo-500/20" : "text-gray-500 hover:text-gray-300"
+              }`}
+            >
+              <span className={file.color}>{file.icon}</span>
+              <span className="font-medium">{file.label}</span>
+            </button>
+          ))}
         </div>
-        {downloadUrl && (
-          <div className="p-4 border-t border-gray-800">
-             <a href={downloadUrl} download="webapp.zip" className="block text-center text-xs bg-indigo-600 text-white py-2 rounded-xl hover:bg-indigo-500 transition">Download ZIP</a>
-          </div>
-        )}
       </div>
 
-      {/* 2. Code Editor */}
-      <div className="flex-1 flex flex-col bg-[#121214]">
-        <div className="h-10 border-b border-gray-800 flex items-center px-6">
-          <span className="text-[10px] text-indigo-400 font-mono italic">editing {activeFile.replace('_', '.')}</span>
+      {/* 2. MIDDLE: Code Editor */}
+      <div className="flex-1 flex flex-col bg-[#121214]/50">
+        <div className="p-4 border-b border-gray-800 flex justify-between items-center bg-[#121214]">
+          <span className="text-xs font-bold text-indigo-400 uppercase tracking-tighter italic">Editor — {activeFile.toUpperCase()}</span>
+          <span className="text-[10px] text-gray-600 font-mono italic">Read-only preview mode</span>
         </div>
         <textarea
+          value={getActiveContent()}
+          onChange={(e) => updateContent(e.target.value)}
+          className="flex-1 p-8 bg-transparent text-gray-300 font-mono text-sm outline-none resize-none custom-scrollbar"
           spellCheck={false}
-          className="flex-1 bg-transparent p-6 font-mono text-sm text-gray-300 outline-none resize-none"
-          value={files[activeFile]}
-          onChange={(e) => updateFileContent(activeFile, e.target.value)}
         />
       </div>
 
-      {/* 3. Browser Preview */}
-      <div className="w-[45%] bg-white flex flex-col">
-        <div className="h-10 bg-gray-100 border-b border-gray-200 flex items-center px-4">
-           <div className="bg-white border border-gray-200 text-[9px] text-gray-400 px-2 py-0.5 rounded flex-1">localhost:3000/vision_preview</div>
+      {/* 3. RIGHT: Live Preview */}
+      <div className="flex-1 bg-white flex flex-col">
+        <div className="p-3 bg-gray-100 border-b border-gray-300 flex items-center gap-2">
+          <div className="flex gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
+            <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
+            <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
+          </div>
+          <div className="flex-1 bg-white rounded px-3 py-1 text-[10px] text-gray-400 font-mono truncate border border-gray-200">
+            localhost:3000/preview
+          </div>
         </div>
-        <iframe srcDoc={combinedDoc} title="Preview" className="flex-1 w-full" />
+        <iframe title="preview" srcDoc={combinedDoc} className="flex-1 w-full h-full border-none" />
       </div>
-    </div>
-  );
-}
-
-function FileRow({ name, active, onClick, icon }: any) {
-  return (
-    <div onClick={onClick} className={`px-4 py-3 flex items-center gap-3 cursor-pointer transition ${active ? 'bg-indigo-600/10 border-r-2 border-indigo-600 text-white' : 'text-gray-500 hover:bg-white/5'}`}>
-      <span>{icon}</span>
-      <span className="text-sm">{name}</span>
     </div>
   );
 }

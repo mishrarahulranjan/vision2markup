@@ -67,61 +67,52 @@ public class LlmService {
     }
 
     public WebAppFiles generateCodeFromDesign(DesignRequestDto request) {
-        log.info("call to generateCodeFromDesign");
-        try{
+        log.info("call to generateCodeFromDesign with {} blocks", request.blocks().size());
+        try {
             String systemPrompt = """
-            You are a senior frontend engineer.
-
-            Generate a complete web application.
-
-            Return STRICT JSON only:
-
-            {
-              "index_html": "...",
-              "style_css": "...",
-              "script_js": "..."
-            }
-
+            You are an expert Frontend Architect specializing in high-end SaaS landing pages.
+            
+            TASK: 
+            Generate a high-fidelity, single-page web application based on the user's component list.
+            
+            TECHNICAL REQUIREMENTS:
+            1. Use Tailwind CSS via CDN (<script src="https://cdn.tailwindcss.com"></script>) in the index_html.
+            2. Use Lucide Icons or FontAwesome for visuals.
+            3. Use Google Fonts (e.g., 'Inter' or 'Plus Jakarta Sans') for a premium feel.
+            4. Return STRICT JSON with keys: "index_html", "style_css", "script_js".
+            
             RULES:
-            - No markdown.
-            - No explanation.
-            - Separate HTML, CSS, JS.
-            - Responsive layout.
-            - Clean semantic structure.
-            - Modern UI.
+            - Maintain the EXACT sequence of components provided.
+            - DO NOT include markdown code blocks (```json).
+            - Output ONLY the raw JSON object.
+            - Ensure every component is responsive (mobile-friendly).
+            - Add subtle hover animations using Tailwind transitions.
             """;
 
-            StringBuilder components = new StringBuilder();
-
-            request.blocks().forEach(block -> {
-                components.append("Component Type: ")
-                        .append(block.type())
-                        .append("\nContent: ")
-                        .append(block.content())
-                        .append("\n\n");
-            });
+            StringBuilder blockList = new StringBuilder();
+            for (int i = 0; i < request.blocks().size(); i++) {
+                var block = request.blocks().get(i);
+                blockList.append(String.format("[%d] TYPE: %s | PROMPT: %s\n", i + 1, block.type(), block.content()));
+            }
 
             String userPrompt = """
-            Build a webpage using these components:
-
+            Build a cohesive website with a '%s' aesthetic using these ordered blocks:
+            
             %s
-
-            Style preference: %s
-
-            Requirements:
-            - Generate layout structure in HTML.
-            - Generate styling in CSS file.
-            - Add small JS interactions if appropriate.
+            
+            INSTRUCTIONS:
+            - Assemble these blocks into a single logical <body>.
+            - Use the 'style_css' file for custom animations or complex gradients that Tailwind can't handle easily.
+            - Use 'script_js' for interactions like mobile menu toggles or scroll-reveal effects.
             """.formatted(
-                    components,
-                    request.style() != null ? request.style() : "modern"
+                    request.style() != null ? request.style() : "modern",
+                    blockList.toString()
             );
 
             return chatService.chat(systemPrompt, userPrompt);
-        }catch(Exception e){
-            log.error("exception while generating code from Design", e);
-            throw new RuntimeException("exception while generating code from Design", e);
+        } catch (Exception e) {
+            log.error("Exception while generating code from Design", e);
+            throw new RuntimeException("AI generation failed", e);
         }
-
     }
 }

@@ -2,23 +2,51 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 1. Global Reset & Base Styles */
 @layer base {
+  :root {
+    color-scheme: dark;
+  }
+
   body {
     @apply bg-[#0b0b0d] text-gray-200 antialiased;
     margin: 0;
+    /* Using Inter for that clean, modern developer tool aesthetic */
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* Smooth transitions for all interactive elements */
+  button, a {
+    @apply transition-all duration-200;
   }
 }
 
+/* 2. Custom Component Styles */
+@layer components {
+  /* Glassmorphism effect for Navbars and Panels */
+  .glass-effect {
+    @apply bg-[#121214]/80 backdrop-blur-xl border border-white/5;
+  }
+
+  /* Professional input styling */
+  .input-dark {
+    @apply bg-black/40 border border-gray-800 rounded-xl px-4 py-2
+           focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20
+           outline-none transition-all text-sm;
+  }
+}
+
+/* 3. Specialized Utilities & Animations */
 @layer utilities {
-  /* Custom thin scrollbar for the Code Editor */
+  /* Custom thin scrollbar for the Code Editor (Chrome/Safari) */
   .custom-scrollbar::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-track {
-    @apply bg-[#0b0b0d];
+    @apply bg-transparent;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
@@ -29,13 +57,46 @@
     @apply bg-indigo-600;
   }
 
-  /* Smooth fade-in for generated content */
+  /* Scrollbar for Firefox */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #313131 transparent;
+  }
+
+  /* Animation: Fade In with slight upward movement */
   .animate-in {
     animation: fadeIn 0.5s ease-out forwards;
   }
 
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+  /* Animation: Professional Slide Up (Used for the Design blocks) */
+  .animate-slide-up {
+    animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(40px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  /* Code Syntax Highlighting Simulation */
+  .syntax-tag { @apply text-pink-400; }
+  .syntax-attr { @apply text-yellow-200; }
+  .syntax-string { @apply text-green-400; }
 }

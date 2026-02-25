@@ -1,12 +1,13 @@
-import React from "react";
+import { BuilderProvider } from "./context/BuilderContext";
 import BuilderPage from "./pages/BuilderPage";
-import "./styles.css"; // Ensure Tailwind CSS is imported
+import "./styles.css";
 
 function App() {
   return (
-    <div className="App">
+    // Everything inside this Provider can now use useBuilder()
+    <BuilderProvider>
       <BuilderPage />
-    </div>
+    </BuilderProvider>
   );
 }
 

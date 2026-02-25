@@ -8,7 +8,9 @@ export default function ModeSwitcher() {
       <button
         onClick={() => setMode("upload")}
         className={`px-6 py-2 rounded-lg text-xs font-bold transition-all ${
-          mode === "upload" ? "bg-indigo-600 text-white shadow-lg" : "text-gray-500 hover:text-gray-300"
+          mode === "upload"
+            ? "bg-indigo-600 text-white shadow-lg"
+            : "text-gray-500 hover:text-gray-300"
         }`}
       >
         UPLOAD SCREENSHOT
@@ -16,7 +18,9 @@ export default function ModeSwitcher() {
       <button
         onClick={() => setMode("design")}
         className={`px-6 py-2 rounded-lg text-xs font-bold transition-all ${
-          mode === "design" ? "bg-indigo-600 text-white shadow-lg" : "text-gray-500 hover:text-gray-300"
+          mode === "design"
+            ? "bg-indigo-600 text-white shadow-lg"
+            : "text-gray-500 hover:text-gray-300"
         }`}
       >
         DESIGN BLOCKS

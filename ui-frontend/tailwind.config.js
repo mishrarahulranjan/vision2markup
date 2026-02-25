@@ -1,18 +1,20 @@
-/** @type {import('tailwindcss').Config} */
 export default {
   content: [
     "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
+    "./src/**/*.{js,ts,jsx,tsx,css}",
   ],
   theme: {
     extend: {
       colors: {
-        // Custom IDE palette
         workspace: {
-          darkest: '#0b0b0d', // Page background
-          dark: '#121214',    // Component background
-          panel: '#18181b',   // Sidebar/Panels
-          border: '#27272a',  // Subtle borders
+          darkest: '#0b0b0d',
+          dark: '#121214',
+          panel: '#18181b',
+          border: '#27272a',
+        },
+        accent: {
+          primary: '#4f46e5',
+          hover: '#6366f1',
         }
       },
       keyframes: {
