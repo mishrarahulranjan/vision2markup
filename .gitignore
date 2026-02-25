@@ -37,3 +37,4 @@ Desktop.ini
 # Project-specific temp files (add more as needed)
 **/generated-ui-*.zip
 **/temp/
+backend-api/src/main/resources/static/assets/**

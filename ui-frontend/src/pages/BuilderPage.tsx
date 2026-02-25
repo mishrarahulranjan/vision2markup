@@ -1,194 +1,73 @@
-import { useState } from "react";
 import { useBuilder, BuilderProvider } from "../context/BuilderContext";
-import {
-  generateImagePreview,
-  generateImageZip,
-  generateDesignPreview,
-  generateDesignZip
-} from "../api/client";
+import { generateImagePreview, generateImageZip, generateDesignPreview, generateDesignZip } from "../api/client";
+import XplorerWorkspace from "../components/XplorerWorkspace";
 
-function BuilderPageContent() {
-  const {
-    mode,
-    setMode,
-    blocks,
-    addBlock,
-    updateBlock,
-    selectedImage,
-    setSelectedImage,
-    generatedHtml,
-    setGeneratedHtml
-  } = useBuilder();
-
-  const [loading, setLoading] = useState(false);
-  const [downloadUrl, setDownloadUrl] = useState<string>("");
+function BuilderContent() {
+  const { mode, setMode, blocks, addBlock, updateBlock, selectedImage, setSelectedImage, files, setFiles, setDownloadUrl, loading, setLoading } = useBuilder();
 
   const handleGenerate = async () => {
-    if ((mode === "upload" && !selectedImage) || (mode === "design" && blocks.length === 0)) return;
-
     setLoading(true);
-    setDownloadUrl("");
-    setGeneratedHtml("");
-
     try {
+      let result;
       if (mode === "upload" && selectedImage) {
-        const html = await generateImagePreview(selectedImage);
-        setGeneratedHtml(html);
-
-        const blob = await generateImageZip(selectedImage);
-        setDownloadUrl(URL.createObjectURL(blob));
-      } else if (mode === "design") {
-        const html = await generateDesignPreview(blocks);
-        setGeneratedHtml(html);
-
-        const blob = await generateDesignZip(blocks);
-        setDownloadUrl(URL.createObjectURL(blob));
+        // result is now the WebAppFiles object { index_html, style_css, script_js }
+        result = await generateImagePreview(selectedImage);
+      } else {
+        result = await generateDesignPreview(blocks);
       }
-    } catch (err) {
-      console.error(err);
-      alert("Failed to generate web app. Check console.");
-    } finally {
-      setLoading(false);
+
+      // CRITICAL: result is already an object, don't use JSON.parse(result)
+      setFiles(result);
+
+      // Now handle the ZIP (this remains a separate call)
+      const zip = mode === "upload"
+        ? await generateImageZip(selectedImage)
+        : await generateDesignZip(blocks);
+      setDownloadUrl(URL.createObjectURL(zip));
+
+    } catch (e) {
+      console.error("Analysis Error:", e); // This will tell you EXACTLY what's wrong in the console
+      alert("Error generating code. Check the console for details.");
     }
+    setLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-white flex justify-center items-start py-10 px-4">
-      <div className="w-full max-w-4xl bg-white shadow-2xl rounded-3xl p-8 space-y-6">
-        {/* Header */}
-        <div className="text-center space-y-2">
-          <h1 className="text-4xl font-extrabold text-indigo-600">Vision2Markup Web Builder</h1>
-          <p className="text-gray-600 text-lg">Upload an image or design your app with blocks</p>
+    <div className="min-h-screen bg-[#0b0b0d] text-gray-200">
+      <nav className="h-16 border-b border-gray-800 bg-[#121214] flex items-center justify-between px-8">
+        <h1 className="font-bold text-lg text-white tracking-widest uppercase">Vision<span className="text-indigo-500">2</span>Markup</h1>
+        <div className="flex bg-black rounded-full p-1 border border-gray-800">
+          <button onClick={() => setMode("upload")} className={`px-4 py-1 rounded-full text-xs ${mode==='upload' ? 'bg-indigo-600' : ''}`}>IMAGE</button>
+          <button onClick={() => setMode("design")} className={`px-4 py-1 rounded-full text-xs ${mode==='design' ? 'bg-indigo-600' : ''}`}>DESIGN</button>
         </div>
+        <button onClick={handleGenerate} disabled={loading} className="bg-white text-black px-6 py-2 rounded-xl font-bold text-sm hover:bg-indigo-500 transition">
+          {loading ? "AI CODING..." : "GENERATE"}
+        </button>
+      </nav>
 
-        {/* Mode Switcher */}
-        <div className="flex justify-center space-x-4">
-          <button
-            onClick={() => setMode("upload")}
-            className={`px-6 py-2 rounded-full font-semibold transition-all ${
-              mode === "upload"
-                ? "bg-indigo-600 text-white shadow-lg scale-105"
-                : "bg-white border border-gray-300 hover:bg-indigo-50"
-            }`}
-          >
-            Upload Image
-          </button>
-          <button
-            onClick={() => setMode("design")}
-            className={`px-6 py-2 rounded-full font-semibold transition-all ${
-              mode === "design"
-                ? "bg-indigo-600 text-white shadow-lg scale-105"
-                : "bg-white border border-gray-300 hover:bg-indigo-50"
-            }`}
-          >
-            Design Builder
-          </button>
-        </div>
-
-        {/* Main Content */}
-        <div className="space-y-4">
-          {/* Image Upload */}
-          {mode === "upload" && (
-            <div className="flex flex-col items-center space-y-2">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={e => {
-                  if (e.target.files?.length) setSelectedImage(e.target.files[0]);
-                }}
-                className="border border-gray-300 rounded-lg px-3 py-2 w-full max-w-md"
-              />
-              {selectedImage && (
-                <p className="text-gray-700 text-sm font-medium">Selected: {selectedImage.name}</p>
-              )}
-            </div>
-          )}
-
-          {/* Design Builder */}
-          {mode === "design" && (
-            <div className="flex flex-col space-y-3">
-              {/* Block Controls */}
-              <div className="flex space-x-3">
-                <button
-                  onClick={() => addBlock("header")}
-                  className="px-3 py-1 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition"
-                >
-                  Add Header
-                </button>
-                <button
-                  onClick={() => addBlock("text")}
-                  className="px-3 py-1 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition"
-                >
-                  Add Text
-                </button>
-                <button
-                  onClick={() => addBlock("button")}
-                  className="px-3 py-1 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition"
-                >
-                  Add Button
-                </button>
+      <main className="p-8">
+        {!files.index_html ? (
+          <div className="max-w-xl mx-auto mt-20 text-center">
+            {mode === "upload" ? (
+              <div className="border-2 border-dashed border-gray-800 rounded-[2rem] p-20 bg-[#121214]">
+                <input type="file" onChange={e => e.target.files && setSelectedImage(e.target.files[0])} />
+                <p className="mt-4 text-gray-500 text-sm italic">{selectedImage ? selectedImage.name : "Upload UI Screenshot"}</p>
               </div>
-
-              {/* Block Editor */}
-              <div className="border border-gray-200 rounded-lg p-3 max-h-72 overflow-y-auto bg-gray-50">
-                {blocks.length === 0 && (
-                  <p className="text-gray-400 text-sm">No blocks yet. Use buttons above to add content.</p>
-                )}
-                {blocks.map(block => (
-                  <textarea
-                    key={block.id}
-                    value={block.content}
-                    onChange={e => updateBlock(block.id, e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg p-2 mb-2 focus:outline-none focus:ring-2 focus:ring-indigo-300"
-                  />
-                ))}
+            ) : (
+              <div className="bg-[#121214] p-8 rounded-[2rem] border border-gray-800">
+                <button onClick={() => addBlock("text")} className="bg-indigo-600 px-4 py-2 rounded text-xs">Add Text Block</button>
+                {blocks.map(b => <textarea key={b.id} value={b.content} onChange={e => updateBlock(b.id, e.target.value)} className="w-full mt-4 bg-black border border-gray-800 p-2" />)}
               </div>
-            </div>
-          )}
-
-          {/* Generate Button */}
-          <button
-            onClick={handleGenerate}
-            disabled={loading || (mode === "upload" && !selectedImage)}
-            className="w-full py-3 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 shadow-lg transition disabled:bg-gray-400"
-          >
-            {loading ? "Generating..." : "Generate Web App"}
-          </button>
-
-          {/* Download */}
-          {downloadUrl && (
-            <a
-              href={downloadUrl}
-              download="generated-webapp.zip"
-              className="block text-center py-3 bg-green-500 text-white font-semibold rounded-2xl hover:bg-green-600 shadow-md transition"
-            >
-              Download ZIP
-            </a>
-          )}
-
-          {/* Live Preview */}
-          {generatedHtml && (
-            <div className="mt-6 border border-gray-200 rounded-xl overflow-hidden shadow-inner">
-              <iframe
-                srcDoc={generatedHtml}
-                title="Live Preview"
-                className="w-full h-96"
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <p className="text-center text-gray-400 text-sm mt-4">Powered by vision2markup</p>
-      </div>
+            )}
+          </div>
+        ) : (
+          <XplorerWorkspace />
+        )}
+      </main>
     </div>
   );
 }
 
 export default function BuilderPage() {
-  return (
-    <BuilderProvider>
-      <BuilderPageContent />
-    </BuilderProvider>
-  );
+  return <BuilderProvider><BuilderContent /></BuilderProvider>;
 }

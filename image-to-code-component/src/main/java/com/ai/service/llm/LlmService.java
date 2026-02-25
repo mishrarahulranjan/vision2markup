@@ -3,8 +3,10 @@ package com.ai.service.llm;
 import com.ai.dto.DesignRequestDto;
 import com.ai.dto.WebAppFiles;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class LlmService {
@@ -14,8 +16,9 @@ public class LlmService {
     public WebAppFiles generateCodeFromImage(byte[] imageBytes,
                                              String mimeType,
                                              String style) {
-
-        String systemPrompt = """
+        log.info("call to generateCodeFromImage");
+        try{
+            String systemPrompt = """
             You are a senior frontend engineer.
 
             Your task is to generate a complete mockup web app.
@@ -43,7 +46,7 @@ public class LlmService {
             - Keep code production clean.
             """;
 
-        String userPrompt = """
+            String userPrompt = """
             Convert this UI screenshot into a modern responsive web app.
 
             Style preference: %s
@@ -55,12 +58,18 @@ public class LlmService {
             - Add basic JS interactions if needed (navbar toggle, buttons etc).
             """.formatted(style != null ? style : "modern");
 
-        return chatService.chat(systemPrompt, userPrompt, mimeType, imageBytes);
+            return chatService.chat(systemPrompt, userPrompt, mimeType, imageBytes);
+        }catch(Exception e){
+            log.error("error while generating code from image", e);
+            throw new RuntimeException("error while generating code from image", e);
+        }
+
     }
 
     public WebAppFiles generateCodeFromDesign(DesignRequestDto request) {
-
-        String systemPrompt = """
+        log.info("call to generateCodeFromDesign");
+        try{
+            String systemPrompt = """
             You are a senior frontend engineer.
 
             Generate a complete web application.
@@ -82,17 +91,17 @@ public class LlmService {
             - Modern UI.
             """;
 
-        StringBuilder components = new StringBuilder();
+            StringBuilder components = new StringBuilder();
 
-        request.blocks().forEach(block -> {
-            components.append("Component Type: ")
-                    .append(block.type())
-                    .append("\nContent: ")
-                    .append(block.content())
-                    .append("\n\n");
-        });
+            request.blocks().forEach(block -> {
+                components.append("Component Type: ")
+                        .append(block.type())
+                        .append("\nContent: ")
+                        .append(block.content())
+                        .append("\n\n");
+            });
 
-        String userPrompt = """
+            String userPrompt = """
             Build a webpage using these components:
 
             %s
@@ -104,10 +113,15 @@ public class LlmService {
             - Generate styling in CSS file.
             - Add small JS interactions if appropriate.
             """.formatted(
-                components,
-                request.style() != null ? request.style() : "modern"
-        );
+                    components,
+                    request.style() != null ? request.style() : "modern"
+            );
 
-        return chatService.chat(systemPrompt, userPrompt);
+            return chatService.chat(systemPrompt, userPrompt);
+        }catch(Exception e){
+            log.error("exception while generating code from Design", e);
+            throw new RuntimeException("exception while generating code from Design", e);
+        }
+
     }
 }
